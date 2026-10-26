@@ -1,0 +1,19 @@
+# llama-cpp-python and llama.cpp server
+# =============================================================================
+# Install ONE of the following builds depending on your CUDA version.
+# On the air-gapped machine, use the wheel file downloaded to your wheelhouse.
+#
+# Pre-built wheels: https://github.com/abetlen/llama-cpp-python/releases
+#
+# For CUDA 12.x (RTX 3050 on modern drivers):
+#   pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu124
+#
+# For CPU-only:
+#   pip install llama-cpp-python
+#
+# To download the wheel file for offline use (run on connected machine):
+#   pip download llama-cpp-python --extra-index-url ... -d ./wheelhouse/
+# =============================================================================
+
+# Pinned after verifying the correct build:
+# llama-cpp-python==0.3.2   # <-- update once verified

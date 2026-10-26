@@ -1,0 +1,44 @@
+# Carter — Python Dependencies
+# =============================================================================
+# IMPORTANT: Pin every version. This file is used to build the offline
+# wheelhouse. All packages must be downloaded before the air-gap is set.
+#
+# To build the wheelhouse on a connected machine:
+#   pip download -r requirements.txt -d ./wheelhouse/
+#
+# To install from wheelhouse (air-gapped):
+#   pip install --no-index --find-links=./wheelhouse/ -r requirements.txt
+# =============================================================================
+
+# --- Core runtime ---
+pyyaml==6.0.2            # Configuration file parsing
+click==8.1.8             # CLI entry point
+
+# --- LLM inference client ---
+# llama-cpp-python is installed separately (see requirements-llm.txt)
+# because it requires a compiled build matching the OS and CUDA version.
+requests==2.32.3         # HTTP client for llama.cpp server API
+
+# --- ML baseline ---
+scikit-learn==1.5.2
+numpy==1.26.4
+pandas==2.2.3
+joblib==1.4.2            # Model serialization (scikit-learn compatible)
+
+# --- Deep learning (PyTorch — CPU or CUDA wheel chosen separately) ---
+# torch is NOT listed here; install the correct wheel for your CUDA version.
+# See requirements-torch.txt for the appropriate index URL / wheel path.
+
+# --- Memory ---
+# sqlite3 is part of the Python standard library — no pip package needed.
+
+# --- Logging and utilities ---
+structlog==24.4.0        # Structured JSON logging
+
+# --- Testing ---
+pytest==8.3.3
+pytest-cov==5.0.0
+
+# --- Development utilities (optional, not needed on air-gapped machine) ---
+# black==24.10.0
+# ruff==0.7.0

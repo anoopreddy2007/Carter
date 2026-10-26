@@ -1,0 +1,104 @@
+# Carter Configuration (Example)
+# Copy this file to carter.yaml and customize for your setup.
+# DO NOT commit carter.yaml to git — it may contain local paths.
+
+# =============================================================================
+# LLM Runtime
+# =============================================================================
+llm:
+  # Path to the GGUF model file (absolute or relative to project root)
+  model_path: "models/llm/model.gguf"
+
+  # Optional: tokenizer directory (if separate from model file)
+  # tokenizer_path: "models/llm/tokenizer/"
+
+  # Inference server (llama.cpp server)
+  host: "127.0.0.1"
+  port: 8080
+
+  # Context and generation limits
+  context_length: 2048
+  max_tokens: 512
+  temperature: 0.7
+  top_p: 0.9
+
+  # GPU offload layers (set to 0 for CPU-only, increase for GPU)
+  # -1 = offload all layers (may OOM on 4GB VRAM with large models)
+  n_gpu_layers: 20
+
+  # Model identifier for logging/evaluation
+  model_id: "unknown"
+  quantization: "Q4_K_M"
+
+# =============================================================================
+# Agent
+# =============================================================================
+agent:
+  # Maximum number of tool-use steps per task
+  max_steps: 5
+
+  # Timeout per tool call (seconds)
+  tool_timeout_seconds: 30
+
+  # Actions requiring explicit user confirmation
+  require_confirmation: ["save_note"]
+
+  # Enable local audit trail
+  audit_log: true
+
+# =============================================================================
+# Workspace
+# =============================================================================
+workspace:
+  # The root directory Carter is allowed to list/read files from
+  root: "workspace/files"
+
+  # Maximum file size Carter will read (bytes)
+  max_file_size_bytes: 524288  # 512 KB
+
+  # Maximum output size from any tool call (bytes)
+  max_output_size_bytes: 65536  # 64 KB
+
+# =============================================================================
+# Memory (SQLite)
+# =============================================================================
+memory:
+  # Path to the SQLite database
+  db_path: "artifacts/carter.db"
+
+  # Maximum note length (characters)
+  max_note_length: 4096
+
+# =============================================================================
+# ML Model
+# =============================================================================
+ml:
+  # Path to the saved ML model artifact
+  model_path: "models/ml/anomaly_model.joblib"
+
+  # Model type: "sklearn" | "pytorch"
+  model_type: "sklearn"
+
+  # Maximum number of features expected
+  max_features: 50
+
+# =============================================================================
+# Logging
+# =============================================================================
+logging:
+  level: "INFO"  # DEBUG | INFO | WARNING | ERROR
+  log_dir: "artifacts/logs"
+  max_log_size_mb: 50
+
+# =============================================================================
+# Safety
+# =============================================================================
+safety:
+  # Hard limit on input prompt size (characters)
+  max_prompt_length: 8192
+
+  # Reject tool calls with unknown tool names
+  strict_tool_allowlist: true
+
+  # Path traversal protection (do not disable)
+  path_traversal_protection: true

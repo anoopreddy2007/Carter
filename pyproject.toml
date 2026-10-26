@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=72"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "carter"
+version = "0.1.0"
+description = "Fully Offline Personal AI Agent and ML Lab"
+requires-python = ">=3.12"
+dependencies = [
+    "pyyaml>=6.0",
+    "click>=8.1",
+    "requests>=2.32",
+    "scikit-learn>=1.5",
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "joblib>=1.4",
+    "structlog>=24.4",
+]
+
+[project.scripts]
+carter = "carter:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["carter*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
