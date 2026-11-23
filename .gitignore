@@ -36,6 +36,8 @@ data/processed/
 artifacts/checkpoints/
 artifacts/logs/
 artifacts/*.db
+artifacts/*.jsonl
+artifacts/models/
 *.db
 *.sqlite
 *.sqlite3

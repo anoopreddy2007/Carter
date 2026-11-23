@@ -20,6 +20,7 @@ from carter.tools.system_status import get_system_status
 from carter.tools.predict_anomaly import predict_anomaly
 from carter.agent.prompts import build_system_prompt, build_agent_turn_prompt
 from carter.agent.llm import BaseLLMClient, create_llm_client
+from carter.agent.audit import AuditLogger, create_audit_logger
 from carter.utils.config import get
 from carter.utils.logging import get_logger
 
@@ -61,13 +62,19 @@ class AgentLoop:
     - Return clear answers (including failure reasons)
     """
 
-    def __init__(self, cfg: dict[str, Any], llm_client: Optional[BaseLLMClient] = None) -> None:
+    def __init__(
+        self,
+        cfg: dict[str, Any],
+        llm_client: Optional[BaseLLMClient] = None,
+        audit_logger: Optional[AuditLogger] = None,
+    ) -> None:
         self.cfg = cfg
         self.max_steps: int = get(cfg, "agent", "max_steps", default=5)
         self.tool_timeout: int = get(cfg, "agent", "tool_timeout_seconds", default=30)
         self.registry = self._build_registry()
         self.system_prompt = build_system_prompt(self.registry)
         self.llm = llm_client if llm_client is not None else create_llm_client(cfg)
+        self.audit = audit_logger if audit_logger is not None else create_audit_logger(cfg)
 
         logger.info(
             "AgentLoop initialized. max_steps=%d, tools=%s",
@@ -246,7 +253,11 @@ class AgentLoop:
         Execute a complete task using the local LLM and tool registry.
         Iterates up to max_steps until the model provides a final answer or reaches budget.
         """
-        logger.info("run_task started: '%s'", user_request[:100])
+        import uuid
+        task_id = str(uuid.uuid4())[:8]
+        start_time = time.monotonic()
+
+        logger.info("run_task started: [task_id=%s] '%s'", task_id, user_request[:100])
         steps: list[AgentStep] = []
         history_steps: list[dict[str, Any]] = []
 
@@ -257,6 +268,8 @@ class AgentLoop:
                 llm_response = self.llm.generate(messages)
             except Exception as e:
                 logger.error("LLM generation failure: %s", e)
+                total_duration_ms = (time.monotonic() - start_time) * 1000
+                self.audit.log_task_completion(task_id, user_request, False, len(steps), total_duration_ms)
                 return AgentResult(
                     success=False,
                     answer=f"Error communicating with local LLM: {e}",
@@ -268,7 +281,7 @@ class AgentLoop:
             try:
                 action = self._parse_action(llm_response)
             except ValueError as val_err:
-                # Malformed JSON tool call — treat as a failed step and report to LLM
+                self.audit.log_step(task_id, step_idx, "invalid_json", {}, None, str(val_err), 0.0)
                 history_steps.append({
                     "tool": "invalid_json",
                     "args": {},
@@ -284,6 +297,8 @@ class AgentLoop:
 
             # If no tool requested, this is the final answer
             if action is None:
+                total_duration_ms = (time.monotonic() - start_time) * 1000
+                self.audit.log_task_completion(task_id, user_request, True, len(steps), total_duration_ms)
                 return AgentResult(
                     success=True,
                     answer=llm_response.strip(),
@@ -305,6 +320,15 @@ class AgentLoop:
                 duration_ms=round(duration_ms, 2),
             )
             steps.append(step_record)
+            self.audit.log_step(
+                task_id,
+                step_idx,
+                action["tool"],
+                action.get("args", {}),
+                result,
+                error,
+                round(duration_ms, 2),
+            )
 
             history_steps.append({
                 "tool": action["tool"],
@@ -314,7 +338,9 @@ class AgentLoop:
             })
 
         # Reached max steps without final answer
+        total_duration_ms = (time.monotonic() - start_time) * 1000
         logger.warning("Task reached step budget (%d steps)", self.max_steps)
+        self.audit.log_task_completion(task_id, user_request, False, len(steps), total_duration_ms)
         return AgentResult(
             success=False,
             answer=f"Reached maximum execution limit of {self.max_steps} steps without completing the task.",
