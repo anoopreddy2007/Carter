@@ -20,6 +20,9 @@ def agent_config(tmp_path: Path) -> dict:
     artifacts.mkdir()
 
     return {
+        "llm": {
+            "backend": "mock",
+        },
         "workspace": {
             "root": str(ws),
             "max_file_size_bytes": 1024,
@@ -116,11 +119,10 @@ class TestAgentLoop:
         assert error is not None
         assert "File not found" in error
 
-    def test_run_task_mvp_stub(self, agent_config: dict):
+    def test_run_task_mock_execution(self, agent_config: dict):
         agent = AgentLoop(agent_config)
         res = agent.run_task("Check system files")
         assert isinstance(res, AgentResult)
         assert res.success is True
-        assert "Check system files" in res.answer
         assert res.steps_used == 0
 

@@ -52,6 +52,9 @@ class ToolRegistry:
     def list_tools(self) -> list[str]:
         return list(self._tools.keys())
 
+    def get_all_tools(self) -> list[ToolSchema]:
+        return list(self._tools.values())
+
     def call(self, name: str, args: dict[str, Any]) -> Any:
         """
         Execute a registered tool with the given arguments.
