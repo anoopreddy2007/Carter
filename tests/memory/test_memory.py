@@ -4,6 +4,7 @@ Tests for the SQLite memory module (save_note, search_notes, delete_note).
 
 from pathlib import Path
 
+# pyrefly: ignore[missing-import]
 import pytest
 
 from carter.tools.memory import save_note, search_notes, list_notes, delete_note
